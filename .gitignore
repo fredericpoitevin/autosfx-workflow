@@ -2,7 +2,7 @@
 
 # Misc
 logs/
-dags/data
+dags/data/
 
 # Byte-compiled / optimized / DLL files 
 __pycache__/
