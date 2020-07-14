@@ -26,13 +26,13 @@ with DAG( os.path.splitext(os.path.basename(__file__))[0],
   dagrun_timeout=900,
   ) as dag:
 
-  def _setup( **kwargs ):
-    print( kwargs['dag_run'].run_id )
-
-  setup = PythonOperator( task_id='setup',
-    python_callable=_setup,
-    provide_context=True
-  )
+  #def _setup( **kwargs ):
+  #  print( kwargs['dag_run'].run_id )
+  #
+  #setup = PythonOperator( task_id='setup',
+  #  python_callable=_setup,
+  #  provide_context=True
+  #)
 
   fasta_file      = FileSensor( task_id='fasta_file' )
   runtag_file     = FileSensor( task_id='runtag_file' )
@@ -59,6 +59,8 @@ with DAG( os.path.splitext(os.path.basename(__file__))[0],
   consensus_cell >> streamlist_file >> merging 
 
   merging >> mtz_file >> phasing
+
+  fasta_file >> phasing
 
   phasing >> map_file >> create_nb
 
