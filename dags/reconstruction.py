@@ -10,8 +10,10 @@ from airflow.operators.subdag_operator import SubDagOperator
 
 
 ##### TEMPORARY FILE DEFINITIONS (should not be hard coded...) 
-stream_filepath = '/gpfs/slac/cryo/fs1/daq/lcls/dev/airflow/dags/data/cxic0415/cxic0415.stream'
-mtz_filepath    = '/gpfs/slac/cryo/fs1/daq/lcls/dev/airflow/dags/data/cxic0415/test.mtzi'
+base_path = '/usr/local/airflow/'
+exp_path = 'dags/data/cxic0415/'
+stream_filepath = 'cxic0415.stream'
+mtz_filepath    = 'test.mtz'
 #####
 
 
@@ -43,20 +45,39 @@ dag = DAG(
 
 
 stream_file = FileSensor( task_id='stream_file',
-    bash_command='test -f {{ params.filepath  }}',
-    params={'filepath': stream_filepath },
+    bash_command="""
+{% set filepath = params.base_path + '/' + params.exp_path + '/' + params.file %}
+ls "{{ filepath }}" && [[ -f "{{ filepath }}" ]] && exit 0
+""",
+    params={
+      'base_path': base_path,
+      'exp_path': exp_path,
+      'file': stream_filepath },
     dag=dag,
   )
 
 mtz_file = FileSensor( task_id='mtz_file',
-    bash_command="test -f {{ params.filepath }}",
-    params={'filepath': mtz_filepath },
+    bash_command="""
+{% set filepath = params.base_path + '/' + params.exp_path + '/' + params.file %}
+ls "{{ filepath }}" && [[ -f "{{ filepath }}" ]] && exit 0
+""",
+    params={
+      'base_path': base_path,
+      'exp_path': exp_path,
+      'file': mtz_filepath },
     dag=dag,
   )
 
 
 merging = JIDOperator( task_id='merging',
-    bash_command="/gpfs/slac/cryo/fs1/daq/lcls/dev/airflow/dags/data/cxic0415/stream2mtz-test.sh ",
+    bash_command="""
+cd {{ params.base_path }}/{{ params.exp_path }}
+sh stream2mtz-test.sh
+""",
+    params={
+      'base_path': base_path,
+      'exp_path': exp_path
+    },
     dag=dag,
   )
 
