@@ -11,6 +11,7 @@ from airflow.operators.subdag_operator import SubDagOperator
 
 ##### TEMPORARY FILE DEFINITIONS (should not be hard coded...) 
 stream_filepath = '/gpfs/slac/cryo/fs1/daq/lcls/dev/airflow/dags/data/cxic0415/cxic0415.stream'
+mtz_filepath    = '/gpfs/slac/cryo/fs1/daq/lcls/dev/airflow/dags/data/cxic0415/test.mtzi'
 #####
 
 
@@ -40,25 +41,28 @@ dag = DAG(
     dagrun_timeout=900,
   )
 
+
 stream_file = FileSensor( task_id='stream_file',
-    bash_command="""
-    if test -f {{ params.filepath }}; then
-      echo "stream_file exists"
-    fi
-    """,
+    bash_command='test -f {{ params.filepath  }}',
     params={'filepath': stream_filepath },
     dag=dag,
   )
 
-merging = JIDOperator( task_id='merging',
-    bash_command="""
-    /gpfs/slac/cryo/fs1/daq/lcls/dev/airflow/dags/data/cxic0415/stream2mtz.sh
-    """,
-    params={},
+mtz_file = FileSensor( task_id='mtz_file',
+    bash_command="test -f {{ params.filepath }}",
+    params={'filepath': mtz_filepath },
     dag=dag,
   )
 
-stream_file >> merging
+
+merging = JIDOperator( task_id='merging',
+    bash_command="/gpfs/slac/cryo/fs1/daq/lcls/dev/airflow/dags/data/cxic0415/stream2mtz-test.sh ",
+    dag=dag,
+  )
+
+
+
+stream_file >> merging >> mtz_file
 
 
 
