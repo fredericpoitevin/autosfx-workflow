@@ -1,6 +1,8 @@
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
+from airflow.operators.subdag_operator import SubDagOperator
+#from reconstruction_subdag import consensus_cell_subdag
 
 import os
 from datetime import datetime
@@ -35,13 +37,18 @@ with DAG( os.path.splitext(os.path.basename(__file__))[0],
   #)
 
   fasta_file      = FileSensor( task_id='fasta_file' )
-  runtag_file     = FileSensor( task_id='runtag_file' )
+  #runtag_file     = FileSensor( task_id='runtag_file' )
   streamlist_file = FileSensor( task_id='streamlist_file' )
   mtz_file        = FileSensor( task_id='mtz_file' )
   map_file        = FileSensor( task_id='map_file' )
   nb_file         = FileSensor( task_id='nb_file' )
 
-  consensus_cell = JIDOperator( task_id='consensus_cell' )
+  #consensus_cell = JIDOperator( task_id='consensus_cell' )
+  #consensus_cell = SubDagOperator(
+  #        task_id='consensus_cell',
+  #        subdag=concensus_cell_subdag( os.path.splitext(os.path.basename(__file__))[0], 'consensus_cell'),
+  #        dag=dag,
+  #    )
 
   merging = JIDOperator( task_id='merging' )
 
@@ -51,14 +58,14 @@ with DAG( os.path.splitext(os.path.basename(__file__))[0],
 
   publish_nb = JIDOperator( task_id='publish_nb' )
 
-  elog_diagnosis = JIDOperator( task_id='elog_diagnosis' )
+  #elog_diagnosis = JIDOperator( task_id='elog_diagnosis' )
   elog_results   = JIDOperator( task_id='elog_results' )
 
-  runtag_file >> consensus_cell >> elog_diagnosis
+  #runtag_file >> consensus_cell >> elog_diagnosis
 
-  consensus_cell >> streamlist_file >> merging 
+  #consensus_cell >> streamlist_file >> merging 
 
-  merging >> mtz_file >> phasing
+  streamlist_file >> merging >> mtz_file >> phasing
 
   fasta_file >> phasing
 
