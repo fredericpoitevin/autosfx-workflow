@@ -11,9 +11,15 @@ from airflow.operators.subdag_operator import SubDagOperator
 
 ##### TEMPORARY FILE DEFINITIONS (should not be hard coded...) 
 base_path = '/usr/local/airflow/'
-exp_path = 'dags/data/cxic0415/'
+exp_name = 'cxic0415'
+exp_path = 'dags/data/${exp_name}/'
+fasta_filepath  = 'test.fasta'
 stream_filepath = 'cxic0415.stream'
 mtz_filepath    = 'test.mtz'
+map_filepath    = 'test.map'
+pdb_filepath    = 'test.pdb'
+nb_filepath     = 'test.ipynb'
+nb_publishedpath= 'test.published'
 #####
 
 
@@ -43,6 +49,19 @@ dag = DAG(
     dagrun_timeout=900,
   )
 
+##### FILESENSORS
+
+fasta_file = FileSensor( task_id='fasta_file',
+    bash_command="""
+{% set filepath = params.base_path + '/' + params.exp_path + '/' + params.file %}
+ls "{{ filepath }}" && [[ -f "{{ filepath }}" ]] && exit 0
+""",
+    params={
+      'base_path': base_path,
+      'exp_path': exp_path,
+      'file': fasta_filepath },
+    dag=dag,
+  )
 
 stream_file = FileSensor( task_id='stream_file',
     bash_command="""
@@ -68,11 +87,108 @@ ls "{{ filepath }}" && [[ -f "{{ filepath }}" ]] && exit 0
     dag=dag,
   )
 
+map_file = FileSensor( task_id='map_file',
+    bash_command="""
+{% set filepath = params.base_path + '/' + params.exp_path + '/' + params.file %}
+ls "{{ filepath }}" && [[ -f "{{ filepath }}" ]] && exit 0
+""",
+    params={
+      'base_path': base_path,
+      'exp_path': exp_path,
+      'file': map_filepath },
+    dag=dag,
+  )
+
+pdb_file = FileSensor( task_id='pdb_file',
+    bash_command="""
+{% set filepath = params.base_path + '/' + params.exp_path + '/' + params.file %}
+ls "{{ filepath }}" && [[ -f "{{ filepath }}" ]] && exit 0
+""",
+    params={
+      'base_path': base_path,
+      'exp_path': exp_path,
+      'file': pdb_filepath },
+    dag=dag,
+  )
+
+nb_file = FileSensor( task_id='nb_file',
+    bash_command="""
+{% set filepath = params.base_path + '/' + params.exp_path + '/' + params.file %}
+ls "{{ filepath }}" && [[ -f "{{ filepath }}" ]] && exit 0
+""",
+    params={
+      'base_path': base_path,
+      'exp_path': exp_path,
+      'file': nb_filepath },
+    dag=dag,
+  )
+
+nb_published = FileSensor( task_id='nb_published',
+    bash_command="""
+{% set filepath = params.base_path + '/' + params.exp_path + '/' + params.file %}
+ls "{{ filepath }}" && [[ -f "{{ filepath }}" ]] && exit 0
+""",
+    params={
+      'base_path': base_path,
+      'exp_path': exp_path,
+      'file': nb_publishedpath },
+    dag=dag,
+  )
+
+##### PROCESS DEFINITIONS
 
 merging = JIDOperator( task_id='merging',
     bash_command="""
 cd {{ params.base_path }}/{{ params.exp_path }}
-sh stream2mtz-test.sh
+bash stream2mtz-test.sh
+""",
+    params={
+      'base_path': base_path,
+      'exp_path': exp_path
+    },
+    dag=dag,
+  )
+
+phasing = JIDOperator( task_id='phasing',
+    bash_command="""
+cd {{ params.base_path }}/{{ params.exp_path }}
+bash phasing.sh
+""",
+    params={
+      'base_path': base_path,
+      'exp_path': exp_path
+    },
+    dag=dag,
+  )
+
+nb_create = JIDOperator( task_id='nb_create',
+    bash_command="""
+cd {{ params.base_path }}/{{ params.exp_path }}
+bash nb_create.sh
+""",
+    params={
+      'base_path': base_path,
+      'exp_path': exp_path
+    },
+    dag=dag,
+  )
+
+nb_publish = JIDOperator( task_id='nb_publish',
+    bash_command="""
+cd {{ params.base_path }}/{{ params.exp_path }}
+bash nb_publish.sh
+""",
+    params={
+      'base_path': base_path,
+      'exp_path': exp_path
+    },
+    dag=dag,
+  )
+
+elogs_results = JIDOperator( task_id='elogs_results',
+    bash_command="""
+cd {{ params.base_path }}/{{ params.exp_path }}
+bash elogs_results.sh
 """,
     params={
       'base_path': base_path,
@@ -82,9 +198,17 @@ sh stream2mtz-test.sh
   )
 
 
+#### DRAW THE DAG
 
-stream_file >> merging >> mtz_file
+stream_file >> merging >> mtz_file >> phasing >> map_file >> nb_create
 
+fasta_file >> phasing >> pdb_file >> nb_create >> nb_file >> nb_publish >> nb_published
+
+nb_published >> elogs_results
+
+map_file >> elogs_results
+
+pdb_file >> elogs_results
 
 
 
@@ -125,9 +249,4 @@ stream_file >> merging >> mtz_file
 
   #runtag_file >> consensus_cell >> elog_diagnosis
   #consensus_cell >> streamlist_file >> merging 
-  #streamlist_file >> merging >> mtz_file >> phasing
-  #fasta_file >> phasing
-  #phasing >> map_file >> create_nb
-  #create_nb >> nb_file >> publish_nb
-  #publish_nb >> elog_results
 
