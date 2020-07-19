@@ -1,6 +1,10 @@
 # LCLS AutoSFX workflows
 development and maintenance of (Airflows) workflows for automated SFX processing at LCLS
 
+## Workflow implementation at SLAC:
+- DAG design: `/gpfs/slac/cryo/fs1/daq/lcls/dev/airflow/`
+- DAG interface: https://lcls-airflow.slac.stanford.edu/admin/
+
 ## Docker image
 Available on DockerHub: [slaclcls/crystfel:latest](https://hub.docker.com/repository/registry-1.docker.io/slaclcls/crystfel/tags?page=1)
 
@@ -14,4 +18,11 @@ docker push slaclcls/crystfel:latest
 ```bash
 shifterimg -v pull slaclcls/crystfel:latest
 ```
+
+## File management at NERSC
+- scripts: `/project/projectdirs/lcls/SFX_automation/`
+- experiment: `/project/projectdirs/lcls/exp/cxi/cxic0515/`
+  - `calib`: 
+  - `res`:
+  - `scratch`:
 
