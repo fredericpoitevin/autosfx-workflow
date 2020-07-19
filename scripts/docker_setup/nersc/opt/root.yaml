@@ -1,7 +1,0 @@
-channels:
-  - lcls-i
-  - conda-forge
-  - defaults
-dependencies:
-  - python=2.7.15
-  - root
