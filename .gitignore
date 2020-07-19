@@ -5,6 +5,7 @@ logs/
 dags/data/
 relmanage/
 old_scripts/
+dags/certs/
 
 # Byte-compiled / optimized / DLL files 
 __pycache__/
