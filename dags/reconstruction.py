@@ -11,6 +11,7 @@ from airflow.exceptions import AirflowException, AirflowSkipException
 import logging
 LOG = logging.getLogger(__name__)
 
+
 class FileSensor( DummyOperator ):
   ui_color = '#b19cd9'
 
@@ -36,33 +37,32 @@ dag = DAG(
 
 ##### FILESENSORS
 
-stream_file = FileSensor( task_id='stream_file',
-    bash_command="""exit 0""",
-    dag=dag,
-  )
+#stream_file = FileSensor( task_id='stream_file',
+#    bash_command="""exit 0""",
+#    dag=dag,
+#  )
 
 ##### PROCESS DEFINITIONS
-
-docker_build = JIDOperator( task_id='docker_build',
-    experiment='abcd',
-    run=12,
-    executable="/global/cfs/cdirs/lcls/fpoitevi/autosfx-workflow/scripts/docker_setup/nersc/build_docker_crystfel.slurm",
-    parameters='',
-    dag=dag,
-  )
 
 merging = JIDOperator( task_id='merging',
     experiment='abcd',
     run=12,
-    executable="/global/cfs/cdirs/lcls/fpoitevi/autosfx-workflow/scripts/merging/stream2mtz.slurm",
+    executable="/project/projectdirs/lcls/SFX_automation/merging/stream2mtz.slurm",
+    parameters='',
+    dag=dag,
+  )
+
+phasing = JIDOperator( task_id='phasing',
+    experiment='abcd',
+    run=12,
+    executable="/project/projectdirs/lcls/SFX_automation/phasing/phasing.slurm",
     parameters='',
     dag=dag,
   )
 
 #### DRAW THE DAG
 
-docker_build >> merging
 
-stream_file >> merging 
+merging >> phasing
 
 
