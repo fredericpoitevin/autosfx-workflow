@@ -1,0 +1,54 @@
+FROM slaclcls/conda-base:latest
+
+
+#-------------------------------------------------------------------------------
+# Create a new conda env with root then install psana
+#
+
+RUN mkdir -p /img/opt
+COPY opt/setup_root.sh /img/opt/
+COPY opt/root.yaml /img/opt/
+
+# Install root using the yaml file 
+RUN cd /img/opt/                                                            && \
+    ./setup_root.sh
+
+
+COPY opt/mk_env.sh /img/opt/
+# Create a local env config script
+RUN cd /img/opt/                                                            && \
+    ./mk_env.sh
+
+#-------------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------------
+# LDCONFIG
+#
+# We recommend running an /sbin/ldconfig as part of the image build (e.g. in
+# the Dockerfile) to update the cache after installing any new libraries in in
+# the image build.
+#
+
+RUN /sbin/ldconfig
+
+#-------------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------------
+# ENTRYPOINT
+#
+
+# build the /img/ dir
+RUN mkdir -p /img
+ADD docker/entrypoint.sh /img
+
+
+# set workdir
+WORKDIR /img
+
+RUN chmod +x entrypoint.sh
+
+ENTRYPOINT ["./entrypoint.sh"]
+
+#-------------------------------------------------------------------------------
