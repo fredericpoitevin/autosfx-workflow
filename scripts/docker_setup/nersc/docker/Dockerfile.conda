@@ -1,0 +1,87 @@
+
+
+FROM ubuntu:18.04
+LABEL maintainer="mona <monarin@slac.stanford.edu>"
+# adapted from Rollin Thomas <rcthomas@lbl.gov>
+# and Kelly Rowland <kellyrowland@lbl.gov>
+
+
+#-------------------------------------------------------------------------------
+# Base Ubuntu packages
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV LANG C.UTF-8
+
+RUN \
+    apt-get update          &&                                                 \
+    apt-get --yes upgrade   &&                                                 \
+    apt-get --yes install                                                      \
+        bzip2                                                                  \
+        curl                                                                   \
+        git                                                                    \
+        libffi-dev                                                             \
+        lsb-release                                                            \
+        tzdata                                                                 \
+        vim                                                                    \
+        wget                                                                   \
+        bash                                                                   \
+        autoconf                                                               \
+        automake                                                               \
+        gcc                                                                    \
+        g++                                                                    \
+        make                                                                   \
+        gfortran                                                               \
+        tar                                                                    \
+        strace
+
+# Timezone to Berkeley
+
+ENV TZ=America/Los_Angeles
+RUN \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime  &&  \
+    echo $TZ > /etc/timezone
+
+
+# The /opt/ scripts require source => switch `RUN` to execute bash (instead sh)
+SHELL ["/bin/bash", "-c"]
+
+
+#-------------------------------------------------------------------------------
+# CONDA
+#
+# Install miniconda 
+#
+
+RUN mkdir /img
+COPY conda.local /img/conda.local
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
+    mv Miniconda3-latest-Linux-x86_64.sh /img/conda.local/                      && \
+    chmod +x /img/conda.local/Miniconda3-latest-Linux-x86_64.sh
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-ppc64le.sh && \
+    mv Miniconda3-latest-Linux-ppc64le.sh /img/conda.local/                     && \
+    chmod +x /img/conda.local/Miniconda3-latest-Linux-ppc64le.sh
+
+RUN cd /img/conda.local                                                     && \
+    . sites/default.sh                                                      && \
+    export STATIC_DIR=../../static                                          && \
+    ./install_conda.sh
+
+#-------------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------------
+# CONDA BASE ENVIRONMENT
+#
+# Build the conda environment 
+#
+
+RUN mkdir -p /img/opt/env
+
+# Copy only the env stuff => don't reinstall the whole conda environment every
+# time psana (lcls2) are updated
+COPY opt/env /img/opt/env
+
+RUN cd /img/opt/env                                                         && \
+    ./setup_env.sh
+
+#-------------------------------------------------------------------------------
