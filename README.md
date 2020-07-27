@@ -25,4 +25,6 @@ shifterimg -v pull slaclcls/crystfel:latest
   - `calib`: 
   - `res`:
   - `scratch`:
+  
+This parallels the data structure at SLAC: `/reg/d/psdm/cxi/cxic0515/`
 
