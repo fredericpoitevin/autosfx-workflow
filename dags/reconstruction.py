@@ -62,7 +62,6 @@ phasing = JIDOperator( task_id='phasing',
 
 #### DRAW THE DAG
 
-
 merging >> phasing
 
 
