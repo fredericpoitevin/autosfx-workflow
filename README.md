@@ -5,26 +5,13 @@ development and maintenance of (Airflows) workflows for automated SFX processing
 - DAG design: `/gpfs/slac/cryo/fs1/daq/lcls/dev/airflow/`
 - DAG interface: https://lcls-airflow.slac.stanford.edu/admin/
 
-## Docker image
-Available on DockerHub: [slaclcls/crystfel:latest](https://hub.docker.com/repository/registry-1.docker.io/slaclcls/crystfel/tags?page=1)
-
-- added CCP4 and XDS to [Dockerfile.crystfel](https://github.com/fredericpoitevin/relmanage/blob/crystfel-docker-image-for-cori/docker/nersc/docker/Dockerfile.crystfel)
-- on personal MacBook:
-```bash
-docker build -t crystfel -f docker/Dockerfile.crystfel .
-docker push slaclcls/crystfel:latest
-```
-- on Cori: 
-```bash
-shifterimg -v pull slaclcls/crystfel:latest
-```
+## Workflow tasks
+We maintain the scripts corresponding to the individual tasks in another repo: [autosfx-scripts](https://github.com/slaclab/autosfx-scripts)
 
 ## File management at NERSC
-- scripts: `/project/projectdirs/lcls/SFX_automation/`
-- experiment: `/project/projectdirs/lcls/exp/cxi/cxic0515/`
-  - `calib`: 
-  - `res`:
-  - `scratch`:
-  
-This parallels the data structure at SLAC: `/reg/d/psdm/cxi/cxic0515/`
+The task scripts are at `/project/projectdirs/lcls/SFX_automation/`
+
+The current format for experiment directory follows that at SLAC, meaning those two paths should be synced:
+- NERSC: `/project/projectdirs/lcls/exp/cxi/cxic0515/`
+- SLAC: `/reg/d/psdm/cxi/cxic0515/`
 
