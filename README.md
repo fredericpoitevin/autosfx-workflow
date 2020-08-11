@@ -12,6 +12,6 @@ We maintain the scripts corresponding to the individual tasks in another repo: [
 The task scripts are at `/project/projectdirs/lcls/SFX_automation/`
 
 The current format for experiment directory follows that at SLAC, meaning those two paths should be synced:
-- NERSC: `/project/projectdirs/lcls/exp/cxi/cxic0515/`
+- NERSC: `/global/cscratch1/sd/psdatmgr/data/psdm/cxi/<experiment>/scratch` (obsolete: `/project/projectdirs/lcls/exp/cxi/cxic0515/`)
 - SLAC: `/reg/d/psdm/cxi/cxic0515/`
 
