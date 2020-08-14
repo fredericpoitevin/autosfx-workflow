@@ -6,9 +6,7 @@ from airflow.models import BaseOperator, SkipMixin
 from airflow.operators.dummy_operator  import DummyOperator
 from airflow.operators.bash_operator import BashOperator
 
-from airflow.operators.jid_plugins import JIDOperator
-from airflow.operators.jid_plugins import JIDJobOperator
-from airflow.operators.jid_plugins import LsSensor, GetFileSensor, PutFileOperator, JIDOperator
+from airflow.operators.jid_plugins import LsSensor, GetFileSensor, PutFileOperator, JIDJobOperator
 from airflow.operators.files_plugins import BulkFilesOperator
 
 from airflow.exceptions import AirflowException, AirflowSkipException
@@ -67,9 +65,9 @@ status_peaks = GetFileSensor( task_id='status_peaks',
     dag=dag,
   )
 
-indexing = JIDOperator( task_id='indexing',
+indexing = JIDJobOperator( task_id='indexing',
     experiment='abcd',
-    run=0,
+    run_id=0,
     executable=indexing_script,
     parameters='',
     dag=dag,
