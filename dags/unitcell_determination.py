@@ -87,8 +87,8 @@ class IsRunTaggedSensor( TagSensor ):
     for tag, runs in tags.items():
       if int(self.run_id) in runs:
         LOG.info( f"Run {self.run_id} has been tagged {tag}, continuing..." )
-        context['ti'].xcom_push( key='return_vallue', value=tag )
-        return True
+        #context['ti'].xcom_push( key='return_value', value=tag )
+        return tag
 
     raise AirflowSkipException( f"Run {self.run_id} has not been tagged in the logbook" ) 
 
@@ -135,15 +135,15 @@ peak_finding = JIDJobOperator( task_id='peak_finding',
     experiment="{{ dag_run.conf['experiment'] }}",
     run_id="{{ dag_run.conf['run_id'] }}",
     executable=peak_finding_script,
-    parameters="{{ dag_run.conf['experiment'] }} {{ dag_run.conf['run_id'] }} {{ dag_run.conf['detector'] }} {{ dag_run.conf['JID_UPDATE_COUNTERS'] }}",
+    parameters="{{ dag_run.conf['experiment'] }} {{ dag_run.conf['run_id'] }} {{ dag_run.conf['detector'] }} {{ dag_run.conf['JID_UPDATE_COUNTERS'] }} {{ task_instance.xcom_pull(task_ids='tag' }}",
     dag=dag,
   )
 
-status_peaks = GetFileSensor( task_id='status_peaks',
-    experiment = "{{ dag_run.conf['experiment'] }}",
-    filepath = "/global/cfs/cdirs/lcls/exp/{{ dag_run.conf['experiment'][:3] }}/{{ dag_run.conf['experiment'] }}/scratch/testfred/status_peaks.txt",
-    dag=dag,
-  )
+#status_peaks = GetFileSensor( task_id='status_peaks',
+#    experiment = "{{ dag_run.conf['experiment'] }}",
+#    filepath = "/global/cfs/cdirs/lcls/exp/{{ dag_run.conf['experiment'][:3] }}/{{ dag_run.conf['experiment'] }}/scratch/testfred/status_peaks.txt",
+#    dag=dag,
+#  )
 
 indexing = JIDJobOperator( task_id='indexing',
     experiment='abcd',
