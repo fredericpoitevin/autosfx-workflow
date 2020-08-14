@@ -41,7 +41,7 @@ class TagSensor( BaseOperator ):
   @apply_defaults
   def __init__(self, 
       experiment: str, 
-      url='https://pswww.slac.stanford.edu/ws-auth/lgbk/lgbk/', 
+      url='https://pswww.slac.stanford.edu/ws-auth/lgbk/lgbk', 
       path='/ws/map_param_editable_to_run_nums', 
       param='TAG', *args, **kwargs ):
     super( TagSensor, self ).__init__(*args, **kwargs)
@@ -51,6 +51,8 @@ class TagSensor( BaseOperator ):
     self.param = param
 
   def execute(self, context):
+    endpoint = f"{self.url}/{self.experiment}/{self.path}?param_name={self.param}" 
+    LOG.info( f"GET {endpoint}" )
     raise AirflowSkipException("nothing")    
     
 
