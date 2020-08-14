@@ -4,7 +4,7 @@ from datetime import datetime
 from airflow import DAG
 from airflow.models import BaseOperator, SkipMixin
 from airflow.operators.dummy_operator  import DummyOperator
-from airflow.operators.jid_plugins import LsSensor, GetFileSensor, PutFileOperator, JIDOperator
+from airflow.operators.jid_plugins import LsSensor, GetFileSensor, PutFileOperator, JIDJobOperator
 from airflow.operators.files_plugins import BulkFilesOperator
 
 from airflow.exceptions import AirflowException, AirflowSkipException
@@ -56,11 +56,13 @@ MRphasing_script = nersc_srcdir+'phasing/MRphasing.slurm'
 make_summary_script = nersc_srcdir+'phasing/summary.slurm'
 
 ls_scratch = LsSensor( task_id='ls_scratch',
+    experiment=experiment,
     directory = nersc_scratch+'/',
     dag=dag,
   )
 
 update_config = PutFileOperator( task_id='update_config',
+    experiment=experiment,
     filepath = config_file,
     data = experiment,
     dag = dag,
@@ -75,25 +77,25 @@ send_user_data = BulkFilesOperator( task_id='send_user_data',
     dag=dag,
   )
 
-merging = JIDOperator( task_id='merging',
+merging = JIDJobOperator( task_id='merging',
     experiment='abcd',
-    run=12,
+    run_id=12,
     executable=merging_script,
     parameters='',
     dag=dag,
   )
 
-MRphasing = JIDOperator( task_id='MRphasing',
+MRphasing = JIDJobOperator( task_id='MRphasing',
     experiment='abcd',
-    run=12,
+    run_id=12,
     executable=MRphasing_script,
     parameters='',
     dag=dag,
   )
 
-make_summary = JIDOperator( task_id='make_summary',
+make_summary = JIDJobOperator( task_id='make_summary',
     experiment='abcd',
-    run=12,
+    run_id=12,
     executable=make_summary_script,
     parameters='',
     dag=dag,
