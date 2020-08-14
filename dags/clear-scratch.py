@@ -11,6 +11,7 @@ from airflow.exceptions import AirflowException, AirflowSkipException
 import logging
 LOG = logging.getLogger(__name__)
 
+
 class FileSensor( DummyOperator ):
   ui_color = '#b19cd9'
 
@@ -26,7 +27,7 @@ default_args = {
 dag = DAG(
     dag_name,
     default_args=default_args,
-    description='AutoSFX reconstruction DAG',
+    description='psdatmgr slurm canceller DAG',
     schedule_interval=None,
     catchup=False,
     max_active_runs=1,
@@ -34,25 +35,14 @@ dag = DAG(
     dagrun_timeout=900,
   )
 
-##### FILESENSORS
-
-stream_file = FileSensor( task_id='stream_file',
-    bash_command="""exit 0""",
-    dag=dag,
-  )
-
-##### PROCESS DEFINITIONS
-
-merging = JIDOperator( task_id='merging',
+clearscratch = JIDOperator( task_id='clear-scratch',
     experiment='abcd',
     run=12,
-    executable="/global/cfs/cdirs/lcls/fpoitevi/autosfx-workflow/scripts/hello-world.sh",
+    executable="/project/projectdirs/lcls/SFX_automation/utils/clear-scratch.slurm",
     parameters='',
     dag=dag,
   )
 
 #### DRAW THE DAG
 
-stream_file >> merging 
-
-
+clearscratch

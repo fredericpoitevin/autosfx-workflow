@@ -6,10 +6,12 @@ dags/data/
 relmanage/
 old_scripts/
 dags/certs/
+obsolete/
 
 # Byte-compiled / optimized / DLL files 
 __pycache__/
 *.py[cod]
+*.swp
 
 # Jupyter notebooks
 .ipynb_checkpoints

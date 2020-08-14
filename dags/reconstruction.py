@@ -44,13 +44,13 @@ dag = DAG(
 
 ##### PROCESS DEFINITIONS
 
-merging = JIDOperator( task_id='merging',
-    experiment='abcd',
-    run=12,
-    executable="/project/projectdirs/lcls/SFX_automation/merging/stream2mtz.slurm",
-    parameters='',
-    dag=dag,
-  )
+#merging = JIDOperator( task_id='merging',
+#    experiment='abcd',
+#    run=12,
+#    executable="/project/projectdirs/lcls/SFX_automation/merging/stream2mtz.slurm",
+#    parameters='',
+#    dag=dag,
+#  )
 
 phasing = JIDOperator( task_id='phasing',
     experiment='abcd',
@@ -62,6 +62,6 @@ phasing = JIDOperator( task_id='phasing',
 
 #### DRAW THE DAG
 
-merging >> phasing
-
+#merging >> phasing
+phasing
 
