@@ -27,7 +27,7 @@ default_args = {
 dag = DAG(
     dag_name,
     default_args=default_args,
-    description='AutoSFX reconstruction DAG',
+    description='psdatmgr slurm canceller DAG',
     schedule_interval=None,
     catchup=False,
     max_active_runs=1,
@@ -35,24 +35,14 @@ dag = DAG(
     dagrun_timeout=900,
   )
 
-##### PROCESS DEFINITIONS
-
-testexec = JIDOperator( task_id='testexec',
+scancel = JIDOperator( task_id='scancel',
     experiment='abcd',
     run=12,
-    executable="/project/projectdirs/lcls/SFX_automation/docker/test-docker-image.slurm",
-    parameters='',
-    dag=dag,
-  )
-
-testlocalexec = JIDOperator( task_id='testlocalexec',
-    experiment='abcd',
-    run=12,
-    executable="/project/projectdirs/lcls/SFX_automation/docker/test-local-dependencies.slurm",
+    executable="/project/projectdirs/lcls/SFX_automation/utils/scancel.slurm",
     parameters='',
     dag=dag,
   )
 
 #### DRAW THE DAG
 
-testexec >> testlocalexec
+scancel
