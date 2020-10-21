@@ -4,7 +4,7 @@ from datetime import datetime
 from airflow import DAG
 from airflow.models import BaseOperator, SkipMixin
 from airflow.operators.dummy_operator  import DummyOperator
-from airflow.operators.jid_plugins import LsSensor, GetFileSensor, PutFileOperator, JIDOperator
+from airflow.operators.jid_plugins import LsSensor, GetFileSensor, PutFileOperator, JIDJobOperator
 from airflow.operators.files_plugins import BulkFilesOperator
 
 from airflow.exceptions import AirflowException, AirflowSkipException
@@ -31,22 +31,26 @@ dag = DAG(
 
 
 ls_dir = LsSensor( task_id='ls_dir',
+    experiment='cxic0415',
     directory = '/global/project/projectdirs/lcls/temp/',
     dag=dag,
   )
 
 get = GetFileSensor( task_id='get',
+    experiment='cxic0415',
     filepath = '/global/project/projectdirs/lcls/temp/hello.world',
     dag=dag,
   )
 
 put = PutFileOperator( task_id='put',
+    experiment='cxic0415',
     filepath = '/global/project/projectdirs/lcls/temp/hello.world',
     data = 'it works...',
     dag = dag,
   )
   
 get_again = GetFileSensor( task_id='get_again',
+    experiment='cxic0415',
     filepath = '/global/project/projectdirs/lcls/temp/hello.world',
     dag=dag,
   )

@@ -248,7 +248,7 @@ class JIDSlurmOperator( BaseOperator ):
       user='mshankar',
       run_at='NERSC',
       poke_interval=30,
-      working_dir='/global/project/projectdirs/lcls/temp',
+      working_dir='/global/project/projectdirs/lcls/SFX_automation/jobs',
       cert='/usr/local/airflow/dags/certs/airflow.crt', key='/usr/local/airflow/dags/certs/airflow.key', root_ca='/usr/local/airflow/dags/certs/rootCA.crt', xcom_push=True,
       *args, **kwargs ):
 
@@ -269,8 +269,10 @@ class JIDSlurmOperator( BaseOperator ):
   def create_control_doc( self, context, executable, parameters ):
     return {
       "_id" : executable,
-      "experiment": context.get('dag_run').conf.get('experiment_name'),
-      "run_num" : context.get('dag_run').conf.get('run_num'),
+      #"experiment": context.get('dag_run').conf.get('experiment_name'),
+      #"run_num" : context.get('dag_run').conf.get('run_num'),
+      "experiment": context.get('dag_run').conf.get('experiment'),
+      "run_num" : context.get('dag_run').conf.get('run_id'),
       "user" : self.user,
       "status" : '',
       "tool_id" : '', # lsurm job id
@@ -341,7 +343,8 @@ class JIDSlurmOperator( BaseOperator ):
 
     LOG.info(f"Attempting to run at {self.run_at}...")
 
-    this = f"{context.get('dag_run').conf.get('experiment_name')}-{context.get('dag_run').conf.get('run_num')}-{context.get('task').task_id}"
+    #this = f"{context.get('dag_run').conf.get('experiment_name')}-{context.get('dag_run').conf.get('run_num')}-{context.get('task').task_id}"
+    this = f"{context.get('dag_run').conf.get('experiment')}-{context.get('dag_run').conf.get('run_id')}-{context.get('task').task_id}"
 
     # upload slurm script it to the destination
     LOG.info("Uploading job scripts...")

@@ -138,12 +138,10 @@ peak_finding = JIDSlurmOperator( task_id='peak_finding',
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=64
 #SBATCH --constraint=haswell
-#SBATCH --time=12:00:00
-#SBATCH --time-min=00:10:00
+#SBATCH --time=02:00:00
 #SBATCH --image=docker:slaclcls/crystfel:latest
-#SBATCH --qos=realtime
-###SBATCH --qos=regular
-###SBATCH --reservation=SFX_AUTO_1.1
+#SBATCH --qos=regular
+#SBATCH --reservation=SFX_AUTO_1.1
 
 t_start=`date +%s`
 export PMI_MMAP_SYNC_WAIT_TIME=600
@@ -173,6 +171,19 @@ exit $RC
 #prevent crash when running on one core
 export HDF5_USE_FILE_LOCKING=FALSE
 
+# activate psana environment
+#source /img/conda.local/env.local
+#source activate psana_base
+
+# set location for experiment db and calib dir
+#export SIT_DATA=$CONDA_PREFIX/data
+#export SIT_PSDM_DATA=/global/cscratch1/sd/psdatmgr/data/psdm
+
+#PSOCAKE
+#export PATH=/project/projectdirs/lcls/SFX_automation/psocake/app:$PATH
+#export PYTHONPATH=/project/projectdirs/lcls/SFX_automation/psocake:$PYTHONPATH
+#export PSOCAKE_FACILITY=LCLS
+
 # define output directory
 outdir="${SIT_PSDM_DATA}/{{ inst }}/{{ exp }}/scratch/r{{ run }}/peak-finding/"
 [[ ! -d $outdir ]] && mkdir -p -m777 $outdir
@@ -183,7 +194,8 @@ clen=" MFX:DET:MMS:04.RBV "
 
 # run!
 #python -u /project/projectdirs/lcls/SFX_automation/psocake/psocake/findPeaksCori1.py
-findPeaksCori1time \
+#findPeaksCori1 
+findPeaks \
     -e {{ exp }} -r {{ run }} \
     --instrument {{ inst }} -d {{ detector }} \
     --tag {{ ti.xcom_pull( task_ids='tag' ) }} \
@@ -230,128 +242,8 @@ findPeaksCori1time \
 #    dag=dag,
 #  )
 
-indexing = JIDSlurmOperator( task_id='indexing',
-    slurm_script="""#!/bin/bash -l
-{%- set exp = dag_run.conf.get('experiment') %}
-{%- set run = dag_run.conf.get('run_id') %}
-{%- set detector = dag_run.conf.get('detector') %}
-{%- set jid_update_url = dag_run.conf.get('JID_UPDATE_COUNTERS') %}
-{%- set slurmkey = exp + '-' + run + '-' ~ task.task_id %}
-{%- set script = exp + '-' + run + '-' ~ task.task_id + '.sh' %}
-
-#SBATCH --account=lcls
-#SBATCH --job-name={{ script }}
-#SBATCH --output={{ slurmkey }}-%j.out
-#SBATCH --error={{ slurmkey }}-%j.err
-#SBATCH --nodes=8
-#SBATCH --tasks-per-node=8
-#SBATCH --gres=craynetwork:4
-#SBATCH --constraint=haswell
-#SBATCH --time=12:00:00
-#SBATCH --time-min=00:10:00
-#SBATCH --image=docker:slaclcls/autosfx2:latest
-#SBATCH --qos=realtime
-###SBATCH --qos=regular
-###SBATCH --reservation=SFX_AUTO_1.1
-
-t_start=`date +%s`
-export PMI_MMAP_SYNC_WAIT_TIME=600
-
-module load python/2.7-anaconda-2019.07 
-
-# send updates back to logbook
-#echo "report.sh {{ jid_update_url }} {{ exp }} {{ run }} {{ detector }};"
-#/project/projectdirs/lcls/SFX_automation/peak_finding/peak-finding-report.sh {{ jid_update_url }} {{ exp }} {{ run }} {{ detector }} &
-
-# run the indexing
-
-psdm="/global/cscratch1/sd/psdatmgr/data/psdm/"
-instrument="mfx"
-
-cxidir=${psdm}/${instrument}/{{ exp }}/scratch/r{{ run }}/peak-finding/
-cxilist=`ls ${cxidir}/*.cxi`
-
-for cxi in $cxilist; do 
-  i=`echo $cxi | awk -v FS="/" '{print$NF}' | awk -v FS="_" '{print $3}'`
-  #echo "srun shifter /img/load_everything.sh /bin/bash {{ script }} $i"
-  #srun shifter /img/load_everything.sh /bin/bash {{ script }} $i
-  echo "/bin/bash {{ script }} $i"
-  /bin/bash {{ script }} $i
-done
-
-RC=$?
-
-t_end=`date +%s`
-echo PSJobCompleted TotalElapsed $((t_end-t_start)) $t_start $t_end
-
-# tidy up and remove scripts?
-
-exit $RC
-""",
-    bash_commands="""#!/bin/bash
-{%- set exp = dag_run.conf.get('experiment') %}
-{%- set run = dag_run.conf.get('run_id') %}
-{%- set detector = dag_run.conf.get('detector') %}
-{%- set inst = exp[:3] %}
-splitIndex=$1
-
-#prevent crash when running on one core
-export HDF5_USE_FILE_LOCKING=FALSE
-
-# set location for experiment db and calib dir
-export SIT_DATA=$CONDA_PREFIX/data
-export SIT_PSDM_DATA=/global/cscratch1/sd/psdatmgr/data/psdm
-
-#PSOCAKE
-export PATH=/project/projectdirs/lcls/SFX_automation/psocake/app:$PATH
-export PYTHONPATH=/project/projectdirs/lcls/SFX_automation/psocake:$PYTHONPATH
-export PSOCAKE_FACILITY=LCLS
-
-# define output directory
-outdir="${SIT_PSDM_DATA}/{{ inst }}/{{ exp }}/scratch/r{{ run }}/peak-finding/"
-[[ ! -d $outdir ]] && mkdir -p -m777 $outdir
-
-#mask="/project/projectdirs/lcls/SFX_automation/peak_finding/staticMask_zhen.h5"
-cell="/project/projectdirs/lcls/SFX_automation/indexing/covid.cell"
-geom="/project/projectdirs/lcls/SFX_automation/indexing/chuck3.geom"
-clen=" MFX:DET:MMS:04.RBV " 
-#"CXI:DS2:MMS:06.RBV"
-
-# run!
-#indexCrystals 
-python -u /global/project/projectdirs/lcls/SFX_automation/indexing/indexCrystalsCoriFred.py \
-  -e {{ exp }} -r {{ run }} \
-  --instrument {{ inst }} -d {{ detector }} \
-  --pkTag {{ ti.xcom_pull( task_ids='tag' ) }} \
-  --tag {{ ti.xcom_pull( task_ids='tag' ) }} \
-  --geom $geom \
-  --peakMethod cxi \
-  --integrationRadius 4,5,6 \
-  --indexingMethod mosflm,xds \
-  --minPeaks 15 \
-  --maxPeaks 2048 \
-  --minRes -1 \
-  --tolerance 5,5,5,1.5 \
-  --outDir $outdir \
-  --sample crystal \
-  --chunkSize 500 \
-  --noe -1 \
-  --pixelSize 0.0001 \
-  --coffset -0.186022425 \
-  --clenEpics $clen \
-  --logger False \
-  --hitParam_threshold 15 \
-  --keepData True \
-  -v 0 \
-  --pdb $cell \
-  --splitIndex $splitIndex
-
-""",
-    dag=dag,
-  )
-
 #### DRAW THE DAG
 
-tag >> peak_finding >> indexing 
+tag >> peak_finding 
 
 

@@ -55,8 +55,10 @@ class JIDSlurmOperator( BaseOperator ):
       run_at='NERSC',
       poke_interval=30,
       working_dir='/global/project/projectdirs/lcls/SFX_automation/jobs', 
-      #'/global/project/projectdirs/lcls/temp',
-      cert='/usr/local/airflow/dags/certs/airflow.crt', key='/usr/local/airflow/dags/certs/airflow.key', root_ca='/usr/local/airflow/dags/certs/rootCA.crt', xcom_push=True,
+      cert='/usr/local/airflow/dags/certs/airflow.crt', 
+      key='/usr/local/airflow/dags/certs/airflow.key', 
+      root_ca='/usr/local/airflow/dags/certs/rootCA.crt', 
+      xcom_push=True,
       *args, **kwargs ):
 
     super(JIDSlurmOperator, self).__init__(*args, **kwargs)
@@ -254,6 +256,9 @@ exit $RC
 {%- set detector = dag_run.conf.get('detector') %}
 {%- set inst = exp[:3] %}
 
+#prevent crash when running on one core
+export HDF5_USE_FILE_LOCKING=FALSE
+
 # activate psana environment
 source /img/conda.local/env.local
 source activate psana_base
@@ -266,17 +271,22 @@ export SIT_PSDM_DATA=/global/cscratch1/sd/psdatmgr/data/psdm
 export PATH=/project/projectdirs/lcls/SFX_automation/psocake/app:$PATH
 export PYTHONPATH=/project/projectdirs/lcls/SFX_automation/psocake:$PYTHONPATH
 export PSOCAKE_FACILITY=LCLS
-
-#prevent crash when running on one core
-export HDF5_USE_FILE_LOCKING=FALSE
+peakfinder="findPeaksCori1"
 
 # define output directory
 outdir="${SIT_PSDM_DATA}/{{ inst }}/{{ exp }}/scratch/r{{ run }}/peak-finding/"
 [[ ! -d $outdir ]] && mkdir -p -m777 $outdir
 
+# parameters
+mask="/project/projectdirs/lcls/SFX_automation/peak_finding/staticMask.h5"
+clen="CXI:DS2:MMS:06.RBV"
+
 # run!
-echo findPeaks -e {{ exp }} -r {{ run }} \
-    --instrument {{ inst }} -d {{ detector }} \
+echo {{ peakfinder }} \
+    --exp {{ exp }} \
+    --run {{ run }} \
+    --instrument {{ inst }} \
+    --det {{ detector }} \
     --tag TAG \
     --outDir $outdir \
     --algorithm 2 \
@@ -297,16 +307,16 @@ echo findPeaks -e {{ exp }} -r {{ run }} \
     --psanaMask_central True \
     --psanaMask_unbond True \
     --psanaMask_unbondnrs True \
-    --mask $outdir/staticMask.h5 \
-    --clen CXI:DS2:MMS:06.RBV \
+    --mask $mask \
+    --sample sample \
+    --clen $clen \
     --coffset 0.3189938 \
+    --detectorDistance 0.144 \
+    --pixelSize 0.00010992 \
     --minPeaks 15 \
     --maxPeaks 2048 \
     --minRes -1 \
-    --sample sample \
-    --pixelSize 0.00010992 \
     --auto False \
-    --detectorDistance 0.144 \
     --access ana
 """,
     dag=dag,
